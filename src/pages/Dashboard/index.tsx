@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
+import { FiChevronDown, FiDollarSign } from 'react-icons/fi';
 import income from '../../assets/income.svg';
 import outcome from '../../assets/outcome.svg';
 import total from '../../assets/total.svg';
@@ -30,12 +31,48 @@ interface Balance {
 }
 
 const Dashboard: React.FC = () => {
-  // const [transactions, setTransactions] = useState<Transaction[]>([]);
-  // const [balance, setBalance] = useState<Balance>({} as Balance);
+  // dados vindo da api
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [balance, setBalance] = useState<Balance>({} as Balance);
 
   useEffect(() => {
     async function loadTransactions(): Promise<void> {
-      // TODO
+      // Carregar as transactions do backend
+      const response = await api.get('/transactions');
+      /*
+para evitar um problema de performace onde sempre que atualizar as transactions
+sempre vai ter que ficar formatando o valor, gastando processamento desnecessario
+    Objetivo -> formatar apenas uma vez que é quando buscade dentro da API
+- var transactionsFaormatted
+-pra cada transaction que chegar dá um map() -> response.data.transactions.map()
+-pegar cada transaction e retornar um objeto
+-passando todos dados que ela já tinha -> ...transaction,
+-depois pegar os valores fomatados -> formattedValue: formatValue(transaction.value),
+OU SEJA, PRA CADA TRANSACTION QUE CHEGAR EU VOU FORMATAR O VALUE DELA E
+GUARDANDO NO formattedValue
+
+*/
+      // Formatação direta(apenas uma vez) do value transaction
+      const transactionsFormatted = response.data.transactions.map(
+        (transaction: Transaction) => ({
+          ...transaction,
+          formattedValue: formatValue(transaction.value),
+          // Formatar a data vinda API usando o Date do JS
+          formattedDate: new Date(transaction.created_at).toLocaleDateString(
+            'pt-br',
+          ),
+        }),
+      );
+      // Formatação direta(apenas uma vez) do value balance
+      const balanceFormatted = {
+        // quando for formatado ele vira uma string
+        income: formatValue(response.data.balance.income),
+        outcome: formatValue(response.data.balance.outcome),
+        total: formatValue(response.data.balance.total),
+      };
+
+      setTransactions(transactionsFormatted);
+      setBalance(balanceFormatted);
     }
 
     loadTransactions();
@@ -51,21 +88,21 @@ const Dashboard: React.FC = () => {
               <p>Entradas</p>
               <img src={income} alt="Income" />
             </header>
-            <h1 data-testid="balance-income">R$ 5.000,00</h1>
+            <h1 data-testid="balance-income">{balance.income}</h1>
           </Card>
           <Card>
             <header>
               <p>Saídas</p>
               <img src={outcome} alt="Outcome" />
             </header>
-            <h1 data-testid="balance-outcome">R$ 1.000,00</h1>
+            <h1 data-testid="balance-outcome">{balance.outcome}</h1>
           </Card>
           <Card total>
             <header>
               <p>Total</p>
               <img src={total} alt="Total" />
             </header>
-            <h1 data-testid="balance-total">R$ 4000,00</h1>
+            <h1 data-testid="balance-total">{balance.total}</h1>
           </Card>
         </CardContainer>
 
@@ -73,26 +110,42 @@ const Dashboard: React.FC = () => {
           <table>
             <thead>
               <tr>
-                <th>Título</th>
-                <th>Preço</th>
-                <th>Categoria</th>
-                <th>Data</th>
+                <th>
+                  Título
+                  <FiChevronDown />
+                </th>
+                <th>
+                  Preço
+                  <FiChevronDown />
+                </th>
+                <th>
+                  Categoria
+                  <FiChevronDown />
+                </th>
+                <th>
+                  Data
+                  <FiChevronDown />
+                </th>
               </tr>
             </thead>
 
             <tbody>
-              <tr>
-                <td className="title">Computer</td>
-                <td className="income">R$ 5.000,00</td>
-                <td>Sell</td>
-                <td>20/04/2020</td>
-              </tr>
-              <tr>
-                <td className="title">Website Hosting</td>
-                <td className="outcome">- R$ 1.000,00</td>
-                <td>Hosting</td>
-                <td>19/04/2020</td>
-              </tr>
+              {transactions.map(transaction => (
+                <tr>
+                  <td className="title">{transaction.title}</td>
+                  <td className={transaction.type}>
+                    {/* if para quando o type da transaction = outcome colocar um - */}
+                    {/* Desafio - colcoar essa condição lá em cima junto com formatvalue */}
+                    {transaction.type === 'outcome' && '-'}
+                    {transaction.formattedValue}
+                  </td>
+                  <td>
+                    <FiDollarSign />
+                    {transaction.category.title}
+                  </td>
+                  <td>{transaction.formattedDate}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </TableContainer>
