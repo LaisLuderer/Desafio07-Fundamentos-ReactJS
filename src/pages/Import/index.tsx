@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
-import filesize from 'filesize'; // lib para formatação num
+import filesize from 'filesize';
 
 import Header from '../../components/Header';
 import FileList from '../../components/FileList';
@@ -23,12 +23,8 @@ const Import: React.FC = () => {
   const history = useHistory();
 
   async function handleUpload(): Promise<void> {
-    // FAZER UPLOAD PARA O BACKEND
     const data = new FormData();
-    // Verificação se existe algum arquivo lá dentro
     if (!uploadedFiles.length) return;
-
-    // NAO PODE ENVIAR MAIS DE 1 ARQUIVO POR VEZ
     const file = uploadedFiles[0];
     data.append('file', file.file, file.name);
 
@@ -41,7 +37,6 @@ const Import: React.FC = () => {
   }
 
   function submitFile(files: File[]): void {
-    // PARA ENVIAR OS NOSSOS ARQUIVOS
     const uploadFiles = files.map(file => ({
       file,
       name: file.name,
