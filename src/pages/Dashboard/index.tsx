@@ -31,41 +31,23 @@ interface Balance {
 }
 
 const Dashboard: React.FC = () => {
-  // dados vindo da api
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [balance, setBalance] = useState<Balance>({} as Balance);
 
   useEffect(() => {
     async function loadTransactions(): Promise<void> {
-      // Carregar as transactions do backend
       const response = await api.get('/transactions');
-      /*
-para evitar um problema de performace onde sempre que atualizar as transactions
-sempre vai ter que ficar formatando o valor, gastando processamento desnecessario
-    Objetivo -> formatar apenas uma vez que é quando buscade dentro da API
-- var transactionsFaormatted
--pra cada transaction que chegar dá um map() -> response.data.transactions.map()
--pegar cada transaction e retornar um objeto
--passando todos dados que ela já tinha -> ...transaction,
--depois pegar os valores fomatados -> formattedValue: formatValue(transaction.value),
-OU SEJA, PRA CADA TRANSACTION QUE CHEGAR EU VOU FORMATAR O VALUE DELA E
-GUARDANDO NO formattedValue
-
-*/
-      // Formatação direta(apenas uma vez) do value transaction
       const transactionsFormatted = response.data.transactions.map(
         (transaction: Transaction) => ({
           ...transaction,
           formattedValue: formatValue(transaction.value),
-          // Formatar a data vinda API usando o Date do JS
+          // Formatar a data vinda da API usando o Date do JS
           formattedDate: new Date(transaction.created_at).toLocaleDateString(
             'pt-br',
           ),
         }),
       );
-      // Formatação direta(apenas uma vez) do value balance
       const balanceFormatted = {
-        // quando for formatado ele vira uma string
         income: formatValue(response.data.balance.income),
         outcome: formatValue(response.data.balance.outcome),
         total: formatValue(response.data.balance.total),
@@ -134,8 +116,6 @@ GUARDANDO NO formattedValue
                 <tr>
                   <td className="title">{transaction.title}</td>
                   <td className={transaction.type}>
-                    {/* if para quando o type da transaction = outcome colocar um - */}
-                    {/* Desafio - colcoar essa condição lá em cima junto com formatvalue */}
                     {transaction.type === 'outcome' && '-'}
                     {transaction.formattedValue}
                   </td>
